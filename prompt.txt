@@ -1,0 +1,99 @@
+
+
+
+# Supplementary Experiment: LLM Hallucination as Epistemic Instability
+
+Purpose:
+To show that even under deterministic reasoning (GPT-5, temperature = 0.2),
+overconfidence systematically increases when the prompt is under-specified or misleading,
+analogous to the ill-conditioned yet stable LTI system.
+
+------------------------------------------------------------
+Experimental setup
+------------------------------------------------------------
+Model: GPT-5 (ChatGPT web / API deterministic mode)
+Temperature: 0.2
+Top-p: 1.0
+Language: English
+Trials: 10 questions × 3 conditions (C0 = baseline, C1 = under-specified, C2 = misleading)
+Output format (mandatory):
+Answer: <text>
+Confidence: <0–100>
+Reason: <1 sentence>
+
+------------------------------------------------------------
+Prompt structure
+------------------------------------------------------------
+Each question is presented in three variants:
+- C0 (Baseline): full and clear context
+- C1 (Under-specified): remove 1–2 critical cues
+- C2 (Misleading): add a distractor or incorrect cue
+
+------------------------------------------------------------
+Domains and Prompts (Total 10 × 3 = 30)
+------------------------------------------------------------
+
+A. General knowledge (Q1–Q4)
+
+Q1. Mozart’s birth year
+C0: What year was Wolfgang Amadeus Mozart born?
+C1: Mozart was an Austrian composer of the 18th century. What year was he born? (location omitted)
+C2: Beethoven was born in 1770; Mozart was a contemporary of Beethoven. What year was Mozart born?
+
+Q2. Mount Fuji’s height
+C0: What is the approximate elevation of Mount Fuji in meters?
+C1: What is the elevation of the tallest mountain in Japan? (name omitted)
+C2: Mount Fuji, located near Tokyo, is often said to be over 5000 meters tall. What is its approximate height?
+
+Q3. Speed of light
+C0: What is the speed of light in vacuum, in kilometers per second?
+C1: What is the typical propagation speed of light in space? (approximate wording)
+C2: Some sources say the speed of sound is 340 m/s; how about light in vacuum? (distractor)
+
+Q4. Capital of Canada
+C0: What is the capital city of Canada?
+C1: What is the main administrative city of the country north of the United States?
+C2: The largest city in Canada is Toronto. What is the capital of Canada?
+
+------------------------------------------------------------
+B. Logical / numerical reasoning (Q5–Q7)
+
+Q5. Simple distance
+C0: A train travels at 80 km/h for 2 hours. What total distance does it cover?
+C1: A train moves at some speed for 2 hours. Estimate its distance.
+C2: Train A travels at 80 km/h for 2 hours, while Train B travels at 100 km/h. What is Train A’s distance?
+
+Q6. Fraction reasoning
+C0: What is one half of one quarter?
+C1: What is one part of another part, such that both are less than one?
+C2: One fourth of a number is 5, so what is one half of one quarter?
+
+Q7. Calendar reasoning
+C0: If today is Monday, what day will it be 9 days from now?
+C1: If today is Monday, what weekday will it be in about a week and a half?
+C2: If today is Monday, after two weeks minus five days, what day will it be?
+
+------------------------------------------------------------
+C. Reading comprehension (Q8–Q10)
+
+Q8. Short inference
+C0: “Taro left Tokyo Station and arrived at Shin-Osaka Station yesterday.”  
+Question: Which mode of transportation did Taro most likely use? (train / car / airplane)
+C1: “Taro traveled for several hours between major Japanese cities yesterday.”  
+Which mode of transportation did he likely use?
+C2: “Taro arrived at Tokyo Station after leaving Shin-Osaka Station yesterday.”  
+Which mode of transportation did he most likely use?
+
+Q9. Causality
+C0: “The glass broke because it fell off the table.” What caused the glass to break?
+C1: “A glass was found shattered on the floor.” What probably happened?
+C2: “The glass broke and then fell off the table.” What caused the glass to break?
+
+Q10. Negation / logic
+C0: If all cats are mammals, and some mammals are not cats, can we conclude that all mammals are cats?
+C1: If cats belong to mammals, and mammals are a large group, can we say every mammal is a cat?
+C2: Some people think all animals are cats. Given that cats are mammals, are all mammals cats?
+
+------------------------------------------------------------
+End of prompts.
+------------------------------------------------------------
