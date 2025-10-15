@@ -9,7 +9,7 @@ Dependencies: pandas, numpy
 Defaults:
   Input:  results_llm_experiment.csv
   Output: summary_by_condition_domain.csv, Tables/tab_ece_condition_domain.tex
-  Percent display: accuracy, overconfident
+  Percent display: accuracy, overconfident, bc_consistency, bc_uncertainty, bc_refusal
 
 Example:
   python make_ece_table.py
@@ -45,12 +45,13 @@ def main():
     )
     ap.add_argument("--out-csv", default="summary_by_condition_domain.csv", help="Output aggregated CSV path")
     ap.add_argument("--out-tex", default="Tables/tab_ece_condition_domain.tex", help="Output LaTeX table path")
+    ap.add_argument("--no-bc", action="store_true", help="Do not include bc_* metrics even if present")
     # Display options
     ap.add_argument("--digits", type=int, default=3, help="Decimal places for LaTeX values")
     ap.add_argument(
         "--as-perc",
         nargs="*",
-        default=["accuracy", "overconfident"],
+        default=["accuracy", "overconfident", "bc_consistency", "bc_uncertainty", "bc_refusal"],
         help="Column names to display as percent (e.g., accuracy, overconfident)",
     )
     ap.add_argument("--title", default=None, help="LaTeX title (unused by default; table is a bare tabular)")
@@ -88,9 +89,18 @@ def main():
     if "overconfident" in df.columns:
         df["overconfident"] = pd.to_numeric(df["overconfident"], errors="coerce")
         metric_map.append(("overconfident", "overconfident"))
+
+    # Optional bc_* metrics (from heuristic/LLM evaluation CSVs)
+    if not args.no_bc:
+        for bc_col in ("bc_consistency", "bc_uncertainty", "bc_refusal"):
+            if bc_col in df.columns:
+                df[bc_col] = pd.to_numeric(df[bc_col], errors="coerce")
+                metric_map.append((bc_col, bc_col))
+
     if not metric_map:
         print("No expected metric columns found (correct/confidence/overconfident).", file=sys.stderr)
         sys.exit(1)
+
 
     # Grouping keys
     group_keys = [condition_col, domain_col]
@@ -131,6 +141,9 @@ def main():
                 if c in agg.columns:
                     agg[c] = agg[c] * 100.0
 
+    # Replace NaN with "–" for clarity in LaTeX output
+    agg = agg.fillna("–")
+
     # Write CSV
     out_csv_path = Path(args.out_csv)
     if out_csv_path.parent and not out_csv_path.parent.exists():
@@ -146,6 +159,7 @@ def main():
 
     # Build LaTeX rows
     lines = []
+    lines.append(r"\resizebox{\textwidth}{!}{%")
     lines.append(r"\begin{tabular}{%s}" % align)
     lines.append(r"\toprule")
     lines.append(" & ".join(header) + r" \\")
@@ -168,6 +182,7 @@ def main():
 
     lines.append(r"\bottomrule")
     lines.append(r"\end{tabular}")
+    lines.append(r"}")  # end resizebox
 
     # LaTeX output
     out_tex = "\n".join(lines)

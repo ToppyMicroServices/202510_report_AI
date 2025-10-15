@@ -18,6 +18,7 @@ import csv
 from pathlib import Path
 from decimal import Decimal, InvalidOperation
 import sys
+import re
 
 
 def fmt(x, digits=3, pct=False):
@@ -160,6 +161,118 @@ def main():
         "OLS_slope": ols_slope,
         "OLS_vs_TS_diff_pct": (pct_diff_val + ("%" if args.percent_sign and pct_diff_val else ""))
     })
+
+    # --- Best-effort: wrap & slim Tables/tab_paired_deltas.tex ---
+    paired_path = Path("Tables/tab_paired_deltas.tex")
+    try:
+        if not paired_path.exists():
+            print(f"[info] {paired_path} not found; skipping wrap/slim.")
+        else:
+            txt = paired_path.read_text(encoding="utf-8")
+
+            # 1) Wrap the first tabular/tabular* with \resizebox if not already wrapped
+            already_wrapped = r"\resizebox{\textwidth}{!}{" in txt
+            if not already_wrapped:
+                pattern_star  = re.compile(r"(\\begin\\{tabular\\*\\}\\{[^}]+\\}\\s*\\{[^}]+\\})([\\s\\S]*?)(\\end\\{tabular\\*\\})", re.M)
+                pattern_plain = re.compile(r"(\\begin\\{tabular\\}\\{[^}]+\\})([\\s\\S]*?)(\\end\\{tabular\\})", re.M)
+                m = pattern_star.search(txt) or pattern_plain.search(txt)
+                if m:
+                    txt = (
+                        txt[:m.start()]
+                        + "\\resizebox{\\textwidth}{!}{%\n"
+                        + m.group(1) + m.group(2) + m.group(3)
+                        + "\n}% <-- ensure closure"
+                        + "\n" + txt[m.end():]
+                    )
+                    paired_path.write_text(txt, encoding="utf-8")
+                    print(f"[ok] wrapped: {paired_path}")
+                else:
+                    print(f"[warn] No tabular or tabular* environment found in {paired_path}; no wrapping applied.")
+
+            # 2) Slim columns: drop first two (model, prompt)
+            txt2 = paired_path.read_text(encoding="utf-8")
+
+            # Find begin/end of (possibly wrapped) tabular or tabular*
+            tbeg = re.search(r"\\begin\\{tabular\\*?\\}\\{([^}]*)\\}", txt2)
+            tend = re.search(r"\\end\\{tabular\\*?\\}", txt2)
+            if tbeg and tend and tbeg.start() < tend.start():
+                align_spec = tbeg.group(1)
+
+                # Remove first two *real* column specs: l/c/r/S or p{..}. Keep | and @{} as-is.
+                def drop_two_cols(spec: str) -> str:
+                    out = []
+                    i, removed = 0, 0
+                    L = len(spec)
+                    while i < L:
+                        # skip spaces
+                        if spec[i].isspace():
+                            out.append(spec[i]); i += 1; continue
+                        # structural tokens (| or @{})
+                        if spec[i] == '|':
+                            out.append(spec[i]); i += 1; continue
+                        if spec.startswith("@{", i):
+                            j = i + 2; depth = 1
+                            while j < L and depth > 0:
+                                if spec[j] == '{': depth += 1
+                                elif spec[j] == '}': depth -= 1
+                                j += 1
+                            out.append(spec[i:j]); i = j; continue
+                        # real column specs to potentially remove
+                        if removed < 2 and spec[i] in "lcrS":
+                            removed += 1; i += 1; continue
+                        if removed < 2 and spec.startswith("p{", i):
+                            j = i + 2; depth = 1
+                            while j < L and depth > 0:
+                                if spec[j] == '{': depth += 1
+                                elif spec[j] == '}': depth -= 1
+                                j += 1
+                            removed += 1; i = j; continue
+                        # default: keep
+                        out.append(spec[i]); i += 1
+                    return "".join(out)
+
+                new_spec = drop_two_cols(align_spec)
+
+                # Replace the alignment spec in the \begin{tabular...}{...}
+                txt2 = txt2[:tbeg.start()] + re.sub(r"\\begin\\{tabular\\*?\\}\\{[^}]*\\}",
+                                                    f"\\\\begin{{tabular}}{{{new_spec}}}",
+                                                    txt2[tbeg.start():], count=1)
+
+                # Now drop the first two cells from each row within the tabular body
+                body_start = tbeg.end()
+                body_end   = tend.start()
+                body = txt2[body_start:body_end]
+                lines = body.splitlines()
+                new_lines = []
+                for ln in lines:
+                    stripped = ln.strip()
+                    # keep rule lines intact
+                    if stripped.startswith(("\\toprule", "\\midrule", "\\bottomrule")):
+                        new_lines.append(ln); continue
+                    # non-row lines
+                    if "&" not in ln:
+                        new_lines.append(ln); continue
+                    # split cells, preserve trailing \\\\ and comments
+                    mrow = re.match(r"^(.*?)(\\\\.*)?\\s*$", ln)
+                    if not mrow:
+                        new_lines.append(ln); continue
+                    cells_part = mrow.group(1)
+                    trail = mrow.group(2) or ""
+                    cells = [c.strip() for c in cells_part.split("&")]
+                    if len(cells) >= 3:
+                        cells = cells[2:]  # drop (model, prompt)
+                        ln = " & ".join(cells) + trail
+                    new_lines.append(ln)
+
+                new_body = "\n".join(new_lines)
+                txt2 = txt2[:body_start] + new_body + txt2[body_end:]
+                paired_path.write_text(txt2, encoding="utf-8")
+                print(f"[ok] slimmed columns (dropped model/prompt): {paired_path}")
+            else:
+                print(f"[warn] Could not locate tabular block for slimming in {paired_path}.")
+    except Exception as e:
+        print(f"[warn] Failed to wrap/slim {paired_path}: {e}")
+
 
 
 if __name__ == "__main__":

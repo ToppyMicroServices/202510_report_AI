@@ -23,7 +23,7 @@ CONDITIONS = ["C0", "C1", "C2", "C3"]
 # -----------------------------
 # CLI options (schema- and key-control)
 # -----------------------------
-parser = argparse.ArgumentParser(description="Paired condition deltas (C0 vs C1/C2/C3) with schema-agnostic joins")
+parser = argparse.ArgumentParser(description="Paired condition deltas (C0 vs C1/C2/C3) with schema-agnostic joins (pass CSV path as positional arg)")
 parser.add_argument("--base", default=CONDITION_BASE, help="Baseline condition label (default: C0)")
 parser.add_argument("--conds", default="C1,C2,C3", help="Comma-separated comparison conditions (default: C1,C2,C3)")
 parser.add_argument("--ignore-prompt", action="store_true", default=True, help="Ignore prompt when pairing (default: enabled, useful if prompt text changes across conditions)")
@@ -33,6 +33,7 @@ parser.add_argument("--model-col", default=None, help="Explicit model column nam
 parser.add_argument("--prompt-col", default=None, help="Explicit prompt column name if not 'prompt'/'task' etc.")
 parser.add_argument("--cond-col", default=None, help="Explicit condition column name if not 'condition'/'cond'")
 parser.add_argument("--itemid-col", default=None, help="Explicit item id column (e.g., 'qid')")
+parser.add_argument("csv", nargs="?", default="results_llm_experiment.csv", help="Input CSV (default: results_llm_experiment.csv)")
 args = parser.parse_args()
 
 CONDITION_BASE = args.base
@@ -190,7 +191,7 @@ def bootstrap_ci(series: pd.Series, n_boot: int = 2000, alpha: float = 0.05):
 # -----------------------------
 
 def _ensure_dirs():
-    os.makedirs("tables", exist_ok=True)
+    os.makedirs("Tables", exist_ok=True)
     os.makedirs("figures", exist_ok=True)
 
 
@@ -203,7 +204,7 @@ def _select_metric_for_forest(summary_df: pd.DataFrame) -> str:
     return avail[0]
 
 
-def _make_latex_table(summary_df: pd.DataFrame, outpath: str = "tables/tab_paired_deltas.tex"):
+def _make_latex_table(summary_df: pd.DataFrame, outpath: str = "Tables/tab_paired_deltas.tex"):
     # choose columns to show
     metrics_order = [m for m in ["ece_w", "ece_f", "brier", "logloss", "halluc_rate"] if m in summary_df["metric"].unique()]
     df = summary_df.copy()
@@ -267,7 +268,7 @@ def _make_forest_plot(summary_df: pd.DataFrame, basepath: str = "figures/fig_del
     plt.close()
     return pdf_path, png_path
 
-df = pd.read_csv("results_llm_experiment.csv")
+df = pd.read_csv(args.csv)
 
 # normalize names
 df = _normalize_columns(df)
