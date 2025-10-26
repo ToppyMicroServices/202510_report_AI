@@ -141,8 +141,8 @@ def main():
                 if c in agg.columns:
                     agg[c] = agg[c] * 100.0
 
-    # Replace NaN with "–" for clarity in LaTeX output
-    agg = agg.fillna("–")
+    # Replace NaN with "--" for clarity in LaTeX output
+    agg = agg.fillna("--")
 
     # Write CSV
     out_csv_path = Path(args.out_csv)

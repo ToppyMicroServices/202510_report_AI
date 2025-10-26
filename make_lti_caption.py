@@ -23,7 +23,7 @@ import re
 
 def fmt(x, digits=3, pct=False):
     """Format numbers with fixed digits using Decimal (no scientific notation).
-    If pct=True, keep the numeric text but do not append a % here — TeX symbol is handled later.
+    If pct=True, keep the numeric text but do not append a % here - TeX symbol is handled later.
     Returns empty string for None/empty inputs.
     """
     if x is None:

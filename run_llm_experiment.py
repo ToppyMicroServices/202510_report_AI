@@ -200,7 +200,7 @@ def check_Q2(answer: str) -> bool:
     return n is not None and is_numeric_close(n, 3776, rel_tol=0.03, abs_tol=50)
 
 def check_Q3(answer: str) -> bool:
-    # speed of light ≈ 299792 km/s (accept 299000–300000)
+    # speed of light ≈ 299792 km/s (accept 299000--300000)
     n = extract_number(answer)
     if n is None: return False
     return 299000 <= n <= 300000

@@ -258,7 +258,7 @@ def load_items_from_path(path: str) -> List[Dict[str, Any]]:
     return items
 
 def main():
-    ap = argparse.ArgumentParser(description="Kantian Stability Evaluator (Prompt–Critique–Revision, non-arbitrary)")
+    ap = argparse.ArgumentParser(description="Kantian Stability Evaluator (Prompt--Critique--Revision, non-arbitrary)")
     ap.add_argument("--prompts", default=os.path.join(os.getcwd(), "prompt.txt"), help="Path to prompts file (default: ./prompt.txt)")
     ap.add_argument("--out_csv", default="results_kantian_eval.csv", help="Output trial CSV")
     ap.add_argument("--model", default=os.getenv("OPENAI_MODEL","gpt-4o-mini"))

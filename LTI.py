@@ -26,7 +26,7 @@ CFG = {
 
     # Epsilon grid (customized sampling)
     'eps_mode': 'custom',
-    # Focused dense sampling in range producing H_Risk ≈ 1–1.4
+    # Focused dense sampling in range producing H_Risk ≈ 1--1.4
     'eps_custom': np.concatenate([
         np.linspace(0.25, 0.35, 15),   # dense central band (typical stable baseline)
         np.linspace(0.05, 0.25, 5),    # lower side (mild instability)
@@ -382,7 +382,7 @@ else:
     r_p_nis_wo = r_s_nis_wo = np.nan
     p_p_nis_wo = p_s_nis_wo = np.nan
 
-# Theil–Sen slope with finite mask
+# Theil--Sen slope with finite mask
 _mx = np.isfinite(df['H_Risk'].values) & np.isfinite(df['NIS'].values)
 if _mx.sum() >= 3:
     ts_slope, ts_inter, _, _ = theilslopes(df['NIS'].values[_mx], df['H_Risk'].values[_mx])
@@ -396,7 +396,7 @@ else:
 
 print("Jackknife Pearson on NIS (min/median/max):", np.nanmin(jack_r), np.nanmedian(jack_r), np.nanmax(jack_r))
 print("NIS w/o min(H_Risk): Pearson r=%.3f (p=%.4f), Spearman r=%.3f (p=%.4f)" % (r_p_nis_wo, p_p_nis_wo, r_s_nis_wo, p_s_nis_wo))
-print("Theil–Sen slope (full / w/o min):", ts_slope, ts_slope_wo)
+print("Theil--Sen slope (full / w/o min):", ts_slope, ts_slope_wo)
 
 # === Plot ===
 plt.figure(figsize=(10,4))
@@ -411,11 +411,11 @@ set_labels(
 
 plt.subplot(1,2,2)
 plt.scatter(df.H_Risk, df.NIS)
-# Compute robust Theil–Sen line (full)
+# Compute robust Theil--Sen line (full)
 from scipy.stats import linregress
 xline=np.linspace(df['H_Risk'].min(), df['H_Risk'].max(), 100)
 if not np.isnan(ts_slope) and not np.isnan(ts_inter):
-    plt.plot(xline, ts_inter + ts_slope*xline, linestyle='--', color='C1', label='Theil–Sen (robust)')
+    plt.plot(xline, ts_inter + ts_slope*xline, linestyle='--', color='C1', label='Theil--Sen (robust)')
 
 # Compute OLS for reporting only (do not plot)
 ols_res = linregress(df['H_Risk'], df['NIS'])
@@ -427,8 +427,8 @@ else:
     OLS_vs_TS_slope_diff_pct_NIS = np.nan
 print(f"[NIS] TS slope={TS_slope_NIS:.6g}, TS intercept={TS_intercept_NIS:.6g}; OLS slope={OLS_slope_NIS:.6g}, OLS intercept={OLS_intercept_NIS:.6g}; rel diff={OLS_vs_TS_slope_diff_pct_NIS:.3f}%")
 
-# Legend (Theil–Sen only)
-if any(l.get_label() == 'Theil–Sen (robust)' for l in plt.gca().lines):
+# Legend (Theil--Sen only)
+if any(l.get_label() == 'Theil--Sen (robust)' for l in plt.gca().lines):
     plt.legend()
 
 set_labels(
@@ -443,7 +443,7 @@ plt.savefig("LTI_dual_plot_autotuned.png", dpi=CFG.get('plot_dpi', 300))
 # Extra figure: H_Risk vs NIS upper-quantile
 plt.figure(figsize=(5,4))
 plt.scatter(df.H_Risk, df.NIS_q)
-# Theil–Sen line for NIS_q
+# Theil--Sen line for NIS_q
 _mq = np.isfinite(df['H_Risk'].values) & np.isfinite(df['NIS_q'].values)
 if _mq.sum() >= 3:
     ts_slope_q, ts_inter_q, _, _ = theilslopes(df['NIS_q'].values[_mq], df['H_Risk'].values[_mq])
@@ -451,7 +451,7 @@ else:
     ts_slope_q, ts_inter_q = np.nan, np.nan
 xline=np.linspace(df['H_Risk'].min(), df['H_Risk'].max(), 100)
 if not np.isnan(ts_slope_q) and not np.isnan(ts_inter_q):
-    plt.plot(xline, ts_inter_q + ts_slope_q*xline, linestyle='--', color='C1', label='Theil–Sen (robust)')
+    plt.plot(xline, ts_inter_q + ts_slope_q*xline, linestyle='--', color='C1', label='Theil--Sen (robust)')
 
 # OLS for reporting only (do not plot)
 ols_res_q = linregress(df['H_Risk'], df['NIS_q'])
@@ -463,7 +463,7 @@ else:
     OLS_vs_TS_slope_diff_pct_NIS_q = np.nan
 print(f"[NIS_q] TS slope={TS_slope_NIS_q:.6g}, TS intercept={TS_intercept_NIS_q:.6g}; OLS slope={OLS_slope_NIS_q:.6g}, OLS intercept={OLS_intercept_NIS_q:.6g}; rel diff={OLS_vs_TS_slope_diff_pct_NIS_q:.3f}%")
 
-if any(l.get_label() == 'Theil–Sen (robust)' for l in plt.gca().lines):
+if any(l.get_label() == 'Theil--Sen (robust)' for l in plt.gca().lines):
     plt.legend()
 set_labels(
     plt.gca(),
@@ -506,12 +506,12 @@ set_labels(
     'Calibration  NIS $= \\mathbb{E}[Z^2]$',
     None
 )
-# Add overall Theil–Sen line for the combined H-scale sweep (display only TS)
+# Add overall Theil--Sen line for the combined H-scale sweep (display only TS)
 _m_scale = np.isfinite(df_scale['H_Risk'].values) & np.isfinite(df_scale['NIS'].values)
 if _m_scale.sum() >= 3:
     ts_slope_scale, ts_inter_scale, _, _ = theilslopes(df_scale['NIS'].values[_m_scale], df_scale['H_Risk'].values[_m_scale])
     xs = np.linspace(df_scale['H_Risk'].min(), df_scale['H_Risk'].max(), 100)
-    plt.plot(xs, ts_inter_scale + ts_slope_scale*xs, linestyle='--', color='k', label='Theil–Sen (robust)')
+    plt.plot(xs, ts_inter_scale + ts_slope_scale*xs, linestyle='--', color='k', label='Theil--Sen (robust)')
     plt.legend()
 plt.legend(); plt.tight_layout(); plt.savefig('LTI_Hscale_vs_NIS.png', dpi=CFG.get('plot_dpi', 300))
 
@@ -547,12 +547,12 @@ set_labels(
     'Calibration  NIS $= \\mathbb{E}[Z^2]$',
     None
 )
-# Add overall Theil–Sen line for toggled sweep
+# Add overall Theil--Sen line for toggled sweep
 _m_scale2 = np.isfinite(df_scale2['H_Risk'].values) & np.isfinite(df_scale2['NIS'].values)
 if _m_scale2.sum() >= 3:
     ts_slope_scale2, ts_inter_scale2, _, _ = theilslopes(df_scale2['NIS'].values[_m_scale2], df_scale2['H_Risk'].values[_m_scale2])
     xs2 = np.linspace(df_scale2['H_Risk'].min(), df_scale2['H_Risk'].max(), 100)
-    plt.plot(xs2, ts_inter_scale2 + ts_slope_scale2*xs2, linestyle='--', color='k', label='Theil–Sen (robust)')
+    plt.plot(xs2, ts_inter_scale2 + ts_slope_scale2*xs2, linestyle='--', color='k', label='Theil--Sen (robust)')
     plt.legend()
 plt.legend(); plt.tight_layout(); plt.savefig('LTI_Hscale_vs_NIS_toggle.png', dpi=CFG.get('plot_dpi', 300))
 
@@ -608,14 +608,14 @@ def run_sweep_generic(A_local, k_policy_local, tag_suffix, zstar=initial_zstar, 
     (rp, pp), (rs, ps) = corr_safe(dfg['H_Risk'], dfg['NIS'])
     print(f"[supp {tag_suffix}] NIS: Pearson r={rp:.3f} (p={pp:.4f}), Spearman r={rs:.3f} (p={ps:.4f})")
 
-    # Plot NIS (Theil–Sen only)
+    # Plot NIS (Theil--Sen only)
     plt.figure(figsize=(5.6,4.4))
     plt.scatter(dfg['H_Risk'], dfg['NIS'])
     _m = np.isfinite(dfg['H_Risk'].values) & np.isfinite(dfg['NIS'].values)
     if _m.sum() >= 3:
         ts_sl, ts_it, _, _ = theilslopes(dfg['NIS'].values[_m], dfg['H_Risk'].values[_m])
         xs = np.linspace(dfg['H_Risk'].min(), dfg['H_Risk'].max(), 100)
-        plt.plot(xs, ts_it + ts_sl*xs, linestyle='--', color='C1', label='Theil–Sen (robust)')
+        plt.plot(xs, ts_it + ts_sl*xs, linestyle='--', color='C1', label='Theil--Sen (robust)')
         plt.legend()
     set_labels(
         plt.gca(),
@@ -625,7 +625,7 @@ def run_sweep_generic(A_local, k_policy_local, tag_suffix, zstar=initial_zstar, 
     )
     plt.tight_layout(); plt.savefig(f'supp_{tag_suffix}_NIS.png', dpi=CFG.get('plot_dpi', 300))
 
-    # Plot NIS_q (Theil–Sen only)
+    # Plot NIS_q (Theil--Sen only)
     (rpq, ppq), _ = corr_safe(dfg['H_Risk'], dfg['NIS_q'])
     plt.figure(figsize=(5.6,4.4))
     plt.scatter(dfg['H_Risk'], dfg['NIS_q'])
@@ -633,7 +633,7 @@ def run_sweep_generic(A_local, k_policy_local, tag_suffix, zstar=initial_zstar, 
     if _mq.sum() >= 3:
         ts_sl2, ts_it2, _, _ = theilslopes(dfg['NIS_q'].values[_mq], dfg['H_Risk'].values[_mq])
         xs2 = np.linspace(dfg['H_Risk'].min(), dfg['H_Risk'].max(), 100)
-        plt.plot(xs2, ts_it2 + ts_sl2*xs2, linestyle='--', color='C1', label='Theil–Sen (robust)')
+        plt.plot(xs2, ts_it2 + ts_sl2*xs2, linestyle='--', color='C1', label='Theil--Sen (robust)')
         plt.legend()
     set_labels(
         plt.gca(),
